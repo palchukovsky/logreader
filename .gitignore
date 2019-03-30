@@ -1,0 +1,4 @@
+*.user
+/_ReSharper.Caches
+/.vs
+/Output

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <GTESTROOT>$(GTESTROOT)/googletest-release-1.8.1/</GTESTROOT>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)\Output\$(PlatformShortName)\bin\standalone\</OutDir>
+    <IntDir>$(SolutionDir)\Output\$(PlatformShortName)\int\$(Configuration)\$(ProjectName)\</IntDir>
+    <LibraryPath>$(SolutionDir)\Output\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(GTESTROOT)/googletest/include;$(GTESTROOT)/googlemock/include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <BuildMacro Include="GTESTROOT">
+      <Value>$(GTESTROOT)</Value>
+    </BuildMacro>
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>Prec.hpp</PrecompiledHeaderFile>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <AdditionalOptions>/Zm1024 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <StringPooling>true</StringPooling>
+    </ClCompile>
+    <Link>
+      <ImportLibrary>$(SolutionDir)Output\$(PlatformShortName)\lib\$(Configuration)\$(TargetName).lib</ImportLibrary>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName)$(TargetExt).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(TargetDir)$(TargetName)$(TargetExt).pgd</ProfileGuidedDatabase>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>
