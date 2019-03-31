@@ -48,6 +48,7 @@
     <ClInclude Include="Prec.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="MaskMatcherTest.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Prec.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -4,3 +4,8 @@
 //     E-mail: eugene@palchukovsky.com
 
 #pragma once
+
+#include <Windows.h>
+#include <cassert>
+#include <cstdlib>
+#include <cstring>

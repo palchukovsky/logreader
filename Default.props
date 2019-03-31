@@ -8,7 +8,7 @@
     <OutDir>$(SolutionDir)\Output\$(PlatformShortName)\bin\standalone\</OutDir>
     <IntDir>$(SolutionDir)\Output\$(PlatformShortName)\int\$(Configuration)\$(ProjectName)\</IntDir>
     <LibraryPath>$(SolutionDir)\Output\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(GTESTROOT)/googletest/include;$(GTESTROOT)/googlemock/include;$(IncludePath)</IncludePath>
+    <IncludePath>$(GTESTROOT)/googletest/include;$(GTESTROOT)/googlemock/include;$(SolutionDir);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
     <BuildMacro Include="GTESTROOT">
