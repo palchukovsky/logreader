@@ -28,9 +28,6 @@
     <ClInclude Include="Prec.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Matcher.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MaskMatcher.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

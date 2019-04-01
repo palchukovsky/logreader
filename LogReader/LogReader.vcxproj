@@ -51,7 +51,6 @@
   <ItemGroup>
     <ClInclude Include="File.hpp" />
     <ClInclude Include="LogReader.hpp" />
-    <ClInclude Include="Matcher.hpp" />
     <ClInclude Include="MaskMatcher.hpp" />
     <ClInclude Include="Prec.hpp" />
   </ItemGroup>

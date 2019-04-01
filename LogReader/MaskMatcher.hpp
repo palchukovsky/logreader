@@ -5,16 +5,13 @@
 //
 
 #pragma once
-
-#include "Matcher.hpp"
-
 namespace logReader {
 
 //! MaskMatcher checks a string for a given mask.
 /**
  * @sa Compile.
  */
-class MaskMatcher final : public Matcher {
+class MaskMatcher {
   struct RuleSet;
 
  public:
@@ -118,7 +115,7 @@ class MaskMatcher final : public Matcher {
   MaskMatcher(const MaskMatcher &) = delete;
   MaskMatcher &operator=(MaskMatcher &&) = delete;
   MaskMatcher &operator=(const MaskMatcher &) = delete;
-  ~MaskMatcher() override;
+  ~MaskMatcher();
 
   //! Compile compiles the mask expression and replaces it, if previous is
   //! existent.
@@ -141,7 +138,7 @@ class MaskMatcher final : public Matcher {
     return m_rules.AddRule<Rule>(args...);
   }
 
-  bool Match(const char *begin, const char *end) const override;
+  bool Match(const char *begin, const char *end) const;
 
  private:
   bool Match(size_t rule,
