@@ -6,6 +6,7 @@
 
 #include "Prec.hpp"
 #include "MaskMatcher.hpp"
+#include "Rules.hpp"
 
 using namespace logReader;
 
@@ -18,88 +19,6 @@ void MaskMatcher::RuleSet::CleanUp() {
   free(set);
   set = nullptr;
   size = 0;
-}
-
-MaskMatcher::AnySymbolWithLen0OrNRule::AnySymbolWithLen0OrNRule(
-    const size_t maxLen)
-    : m_maxLen(maxLen) {}
-
-bool MaskMatcher::AnySymbolWithLen0OrNRule::HasError() const { return false; }
-
-MaskMatcher::AnySymbolWithLen0OrNRule::Result
-MaskMatcher::AnySymbolWithLen0OrNRule::Check(const char *&begin,
-                                             const char *,
-                                             const char *&end) const {
-  assert(begin <= end);
-  if (begin > end) {
-    return RESULT_FAILED;
-  }
-  if (begin == end) {
-    return RESULT_COMPLETED_FULL;
-  }
-  const auto fieldEnd = begin + m_maxLen;
-  if (fieldEnd < end) {
-    end = fieldEnd;
-  }
-  return RESULT_COMPLETED_GREEDY;
-}
-
-bool MaskMatcher::AnySymbolWithLen0OrMoreRule::HasError() const {
-  return false;
-}
-
-MaskMatcher::AnySymbolWithLen0OrMoreRule::Result
-MaskMatcher::AnySymbolWithLen0OrMoreRule::Check(const char *&begin,
-                                                const char *,
-                                                const char *&end) const {
-  assert(begin <= end);
-  if (begin > end) {
-    return RESULT_FAILED;
-  }
-  if (begin == end) {
-    return RESULT_COMPLETED_FULL;
-  }
-  return RESULT_COMPLETED_GREEDY;
-}
-
-MaskMatcher::FixedStringRule::FixedStringRule(const char *begin,
-                                              const char *end)
-    : m_len(static_cast<size_t>(end - begin)),
-      m_template(static_cast<char *>(malloc(m_len * sizeof(char)))) {
-  assert(begin <= end);
-  if (!m_template) {
-    return;
-  }
-  memcpy(m_template, begin, m_len * sizeof(char));
-}
-MaskMatcher::FixedStringRule::~FixedStringRule() { free(m_template); }
-
-bool MaskMatcher::FixedStringRule::HasError() const {
-  return m_template == nullptr;
-}
-
-MaskMatcher::FixedStringRule::Result MaskMatcher::FixedStringRule::Check(
-    const char *&begin, const char *strictBegin, const char *&end) const {
-  assert(begin <= end);
-  if (begin > end) {
-    return RESULT_FAILED;
-  }
-  for (auto it = begin; static_cast<size_t>(end - it) >= m_len; ++it) {
-    size_t i = 0;
-    do {
-      if (it[i] != m_template[i]) {
-        break;
-      }
-    } while (++i < m_len);
-    if (i == m_len) {
-      begin = end = it + m_len;
-      return RESULT_COMPLETED_FULL;
-    }
-    if (strictBegin <= it) {
-      break;
-    }
-  }
-  return RESULT_FAILED;
 }
 
 bool MaskMatcher::Compile(const char *mask) {
@@ -224,32 +143,37 @@ size_t MaskMatcher::CheckRule(const size_t rule,
   switch (m_rules.set[rule]->Check(begin, strictBegin, fieldEnd)) {
     case Rule::RESULT_COMPLETED_FULL:
       // The current rule is very simple and it completed with the fixed field
-      // borders. Starting to check next rule from this field end.
+      // borders. Starting to check next rule from this field end (rule's
+      // written it in begin).
       assert(begin <= fieldEnd);
-      assert(fieldEnd <= end);
-      begin = fieldEnd;
       return rule + 1;
 
     case Rule::RESULT_COMPLETED_GREEDY: {
       // The current rule is greedy so it has to check each possible branch to
-      // specify requirements of this greedy rule.
-      const auto nextRuleId = rule + 1;
-      if (nextRuleId >= m_rules.size) {
+      // check with requirements of this greedy rule.
+      if (rule + 1 >= m_rules.size) {
         // As this is greedy and last rule - it passed for sure.
         begin = fieldEnd;
-        return nextRuleId;
+        return rule + 1;
       }
       for (;;) {
-        auto it = begin;
-        if (Match(nextRuleId, it, fieldEnd, end)) {
+        const auto it = begin;
+        auto nextRuleId = rule + 1;
+        if (Match(nextRuleId, begin, fieldEnd, end)) {
           begin = end;
           return m_rules.size;
         }
-        if (it == begin || ++begin > fieldEnd) {
+        if (it == begin || begin >= fieldEnd) {
+          // No one next rule has found something in this branch from the start.
+          // Negative results too. It means there are no chances to find
+          // something in the rest.
           return false;
         }
-        // Means match completed successfully, but it's not the end of a
-        // sequence. It has to continue tests in this branch.
+        // It has completed branch, but the rule set is over not at the symbol
+        // sequence end.It means one or more greedy rules don't eat enough.
+        // Checking each branch that starts in the current field "strict begin".
+        // New begin has begin for the next field after the last successful.
+        // Continue.
       }
     }
 
@@ -261,20 +185,24 @@ size_t MaskMatcher::CheckRule(const size_t rule,
   }
 }
 
-bool MaskMatcher::Match(size_t rule,
+bool MaskMatcher::Match(size_t &rule,
                         const char *&begin,
                         const char *strictBegin,
                         const char *end) const {
   assert(rule < m_rules.size);
-  do {
+  assert(begin <= strictBegin);
+  assert(strictBegin <= end);
+  for (;;) {
     rule = CheckRule(rule, begin, strictBegin, end);
+    if (rule >= m_rules.size) {
+      assert(begin <= end);
+      return begin == end;
+    }
     if (!rule) {
       return false;
     }
     strictBegin = begin;
-  } while (rule < m_rules.size);
-  assert(begin <= end);
-  return begin == end;
+  }
 }
 
 bool MaskMatcher::Match(const char *begin, const char *end) const {
@@ -285,5 +213,9 @@ bool MaskMatcher::Match(const char *begin, const char *end) const {
     // string matches".
     return begin == end;
   }
-  return Match(0, begin, begin, end);
+  for (size_t i = 0; i < m_rules.size; ++i) {
+    m_rules.set[i]->Reset();
+  }
+  size_t rule = 0;
+  return Match(rule, begin, begin, end);
 }

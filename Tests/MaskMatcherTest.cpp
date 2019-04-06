@@ -185,6 +185,15 @@ TEST(MaskMatcher, Regress) {
   TestMatch(matcher,
             "wimin who wear him next their harts.  But I do not weep for him.",
             true);
+  TestMatch(matcher,
+            "Men who have made money and do not yet know that money has made "
+            "them....",
+            true);
+  TestMatch(matcher, " who they are....", true);
+  TestMatch(
+      matcher,
+      "found in different forms amon....  who was really a daughter o....",
+      true);
   EXPECT_TRUE(matcher.Compile("* th?m, *."));
   TestMatch(matcher,
             "-he never used them, by the way--and his mind is perfectly clear.",
